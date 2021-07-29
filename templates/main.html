@@ -1,0 +1,96 @@
+<html>
+<head><title>Fake keyboard</title></head>
+<style>
+  fieldset {
+    text-align: center
+  }
+  
+  .command {
+    width: 80%; 
+    height: 100px;
+  }
+  
+  .form-control {
+    padding: 10px;
+    font-size: large;
+    border-radius: 10px;
+  }
+</style>
+<body>
+    <h2>Ciao {{ nome }}</h2>
+    <div id="app">
+      <fieldset>
+        <legend>Status</legend>
+        <h3>Status: <span id="status">{{ status }}</span></h3>
+        <button class="command" onclick="onGetStatus()">Status</button>
+      </fieldset>
+      <fieldset>
+        <legend>Start</legend>
+        <select id="key" class="form-control">
+            <option value="a">a</option>
+            <option value="esc">esc</option>
+        </select>
+        <input id="timespan" type="number" class="form-control"/>
+        <button class="command" onclick="onStart()">Start</button>
+      </fieldset>
+      <fieldset>
+        <legend>Stop</legend>
+        <button class="command" onclick="onStop()">Stop</button>
+      </fieldset>
+      <fieldset>
+        <legend>Spegni</legend>
+        <button class="command" onclick="onPoweroff()">Poweroff</button>
+      </fieldset>
+    </div>
+    <script type="text/javascript" src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+
+    <script type="text/javascript">
+      const url = "http://" + document.domain + ":" + location.port;
+      const div = document.getElementById('app');
+      const status = document.getElementById('status');
+      const keyinput = document.getElementById('key');
+      const timespaninput = document.getElementById('timespan');
+      keyinput.value = localStorage.getItem('key');
+      timespaninput.valueAsNumber = JSON.parse(localStorage.getItem('timespan'));
+      const socket = io.connect(url + "/dd");
+      socket.on('status', function(msg) {
+                
+      });
+      
+      function onGetStatus() {
+        fetch(url + "/status")
+        .then(res => res.json())
+        .then(data => {
+          status.innerText = data.status;
+        });
+      }
+            
+      function onStart() {
+        localStorage.setItem('key', keyinput.value);
+        localStorage.setItem('timespan', timespaninput.valueAsNumber);
+        fetch(url + "/start", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({key: keyinput.value, timespan: timespaninput.valueAsNumber})
+        })
+        .then(res => res.json())
+        .then(data => {
+          status.innerText = data.status;
+        });
+      }
+      function onStop() {
+        fetch(url + "/stop")
+        .then(res => res.json())
+        .then(data => {
+          status.innerText = data.status;
+        });
+      }
+      function onPoweroff() {
+        if(confirm('Sicuro di voler spegnere tutto?'))
+          fetch(url + "/shutdown");
+      }
+    </script>
+</body>
+</html>
